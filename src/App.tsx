@@ -1,33 +1,40 @@
-import { useState, useEffect } from "react";
-import "./index.css";
+import { useState } from "react";
 
 export function App() {
-  const [count, setCount] = useState(0);
+  const [url, setUrl] = useState("");
+  const [message, setMessage] = useState("");
 
-  // Fetch initial count from backend
-  useEffect(() => {
-    fetch("/api/counter")
-      .then(res => res.json())
-      .then(data => setCount(data.count));
-  }, []);
+  const takeScreenshot = async () => {
+    if (!url) return setMessage("Please enter a URL");
 
-  const updateCount = (action: string) => {
-    fetch("/api/counter", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action }),
-    })
-      .then(res => res.json())
-      .then(data => setCount(data.count));
+    try {
+      const res = await fetch("/screenshot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url }),
+      });
+      const data = await res.json();
+      if (res.ok) setMessage(`Screenshot saved: ${data.path}`);
+      else setMessage(`Error: ${data.error}`);
+    } catch (err) {
+      setMessage(`Error: ${err}`);
+    }
   };
 
   return (
     <div style={{ textAlign: "center", marginTop: "50px" }}>
-      <h1>Counter App</h1>
-      <p>Count: {count}</p>
-      <button onClick={() => updateCount("increment")}>Increment</button>
-      <button onClick={() => updateCount("decrement")}>Decrement</button>
-      <button onClick={() => updateCount("reset")}>Reset</button>
+      <h1>URL Screenshot Tool</h1>
+      <input
+        type="text"
+        value={url}
+        placeholder="Enter URL"
+        onChange={(e) => setUrl(e.target.value)}
+        style={{ width: "300px", padding: "5px" }}
+      />
+      <button onClick={takeScreenshot} style={{ marginLeft: "10px" }}>
+        Take Screenshot
+      </button>
+      <p>{message}</p>
     </div>
   );
 }
